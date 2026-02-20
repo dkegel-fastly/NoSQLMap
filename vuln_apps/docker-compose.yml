@@ -1,4 +1,3 @@
-version: "3.8"
 services:
     apache:
         container_name: apache
@@ -9,6 +8,11 @@ services:
             - "${NOSQLMAP_VULN_APPS_APACHE_PORT:-8080}:80"
         volumes:
             - ./src:/usr/local/apache2/htdocs
+        depends_on:
+            php:
+                condition: service_started
+            mongo:
+                condition: service_healthy
     php:
         container_name: php
         build: ./docker/php
@@ -25,3 +29,6 @@ services:
         build: ./docker/mongo
         ports:
             - "${NOSQLMAP_VULN_APPS_MONGO_PORT:-27017}:27017"
+        healthcheck:
+            test: ["CMD", "sh", "-c", "echo 'db.runCommand({ ping: 1 }).ok' | mongosh --quiet"]
+            start_period: 30s
