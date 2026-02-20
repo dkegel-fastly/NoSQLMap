@@ -11,7 +11,7 @@
 			$conn = new MongoClient('mongodb://127.0.0.1');
 			$db = $conn->appUserData;
 				$collection = $db->users;
-				$search = $_GET['usersearch'];
+				$usersearch = $_GET['usersearch'];
 				$js = "function () { var query = '". $usersearch . "'; return this.username == query;}";
 				print $js;
 				print '<br/>';

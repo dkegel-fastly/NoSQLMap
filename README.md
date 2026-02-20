@@ -46,7 +46,7 @@ There are some various other libraries required that a normal Python installatio
 python setup.py install
 ```
 
-Alternatively you can build a Docker image by changing to the docker directory and entering:
+Alternatively you can build a Docker image by entering:
 
 ```
 docker build -t nosqlmap .
@@ -102,4 +102,45 @@ This repo also includes an intentionally vulnerable web application to test NoSQ
 docker-compose build && docker-compose up
 ```
 
-Once that is complete, you should be able to access the vulnerable application by visiting: https://127.0.0.1/index.html
+Once that is complete, you should be able to access the vulnerable application by visiting: https://127.0.0.1:8080/index.html
+
+## Scripting
+
+The cli can also be scripted.  Here's an example script using NoSQLMap to detect the vulnerabilities in vuln_apps:
+
+```
+$ echo  "1. Account Lookup (acct.php)"
+$ docker-compose run --remove-orphans nosqlmap \
+    --attack 2 \
+    --victim host.docker.internal \
+    --webPort 8080 \
+    --uri "/acct.php?acctid=test" \
+    --httpMethod GET \
+    --params 1 \
+    --injectSize 4 \
+    --injectFormat 2 \
+    --doTimeAttack n
+
+$ echo "2. User Data Lookup (userdata.php) - JavaScript Injection"
+$ docker-compose run --remove-orphans nosqlmap \
+    --attack 2 \
+    --victim host.docker.internal \
+    --webPort 8080 \
+    --uri "/userdata.php?usersearch=test" \
+    --httpMethod GET \
+    --params 1 \
+    --injectSize 4 \
+    --injectFormat 2 \
+    --doTimeAttack n
+
+$ echo "3. Order Data Lookup (orderdata.php) - JavaScript Injection"
+$ docker-compose run --remove-orphans nosqlmap \
+    --attack 2 \
+    --victim host.docker.internal \
+    --webPort 8080 \
+    --uri "/orderdata.php?ordersearch=test" \
+    --httpMethod GET \
+    --params 1 \
+    --injectSize 4 \
+    --injectFormat 2 \
+    --doTimeAttack n
