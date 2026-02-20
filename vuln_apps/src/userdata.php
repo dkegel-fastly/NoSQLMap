@@ -8,28 +8,31 @@
 		if (isset($_GET['usersearch']) && !empty($_GET['usersearch'])) {
 			try {
 			$result = "";
-			$conn = new MongoClient('mongodb://127.0.0.1');
-			$db = $conn->appUserData;
-				$collection = $db->users;
-				$usersearch = $_GET['usersearch'];
-				$js = "function () { var query = '". $usersearch . "'; return this.username == query;}";
-				print $js;
-				print '<br/>';
-		
-			$cursor = $collection->find(array('$where' => $js));
-			echo $cursor->count() . ' user found. <br/>';
-		
-			foreach ($cursor as $obj) {
-					echo 'Name: ' . $obj['name'] . '<br/>';
-					echo 'Username: ' . $obj['username'] . '<br/>';
-					echo 'Email: ' . $obj['email'] . '<br/>';
+			$manager = new MongoDB\Driver\Manager('mongodb://root:prisma@mongo:27017');
+			$usersearch = $_GET['usersearch'];
+			$js = "function () { var query = '". $usersearch . "'; return this.username == query;}";
+			print $js;
+			print '<br/>';
+
+			// Create query with $where operator for JavaScript injection vulnerability
+			$filter = ['$where' => $js];
+			$options = [];
+			$query = new MongoDB\Driver\Query($filter, $options);
+
+			$cursor = $manager->executeQuery('appUserData.users', $query);
+			$docs = $cursor->toArray();
+			echo count($docs) . ' user found. <br/>';
+
+			foreach ($docs as $obj) {
+					echo 'Name: ' . $obj->name . '<br/>';
+					echo 'Username: ' . $obj->username . '<br/>';
+					echo 'Email: ' . $obj->email . '<br/>';
 					echo '<br/>';
 			}
-		
-	$conn->close();
-	} catch (MongoConnectionException $e) {
+
+	} catch (MongoDB\Driver\Exception\Exception $e) {
 		die('Error connecting to MongoDB server : ' . $e->getMessage());
-	} catch (MongoException $e) {
+	} catch (Exception $e) {
 		die('Error: ' . $e->getMessage());
 	}
 	}
